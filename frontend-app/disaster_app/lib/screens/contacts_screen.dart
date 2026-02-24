@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/contact.dart';
 
 class ContactsScreen extends StatefulWidget {
@@ -9,10 +11,42 @@ class ContactsScreen extends StatefulWidget {
 }
 
 class _ContactsScreenState extends State<ContactsScreen> {
-  final List<Contact> contacts = [];
+  List<Contact> contacts = [];
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    loadContacts();
+  }
+
+  Future<void> saveContacts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> contactList = contacts
+        .map(
+          (contact) =>
+              jsonEncode({'name': contact.name, 'phone': contact.phone}),
+        )
+        .toList();
+
+    await prefs.setStringList('contacts', contactList);
+  }
+
+  Future<void> loadContacts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String>? contactList = prefs.getStringList('contacts');
+
+    if (contactList != null) {
+      setState(() {
+        contacts = contactList.map((item) {
+          final decoded = jsonDecode(item);
+          return Contact(name: decoded['name'], phone: decoded['phone']);
+        }).toList();
+      });
+    }
+  }
 
   void addContact() {
     if (nameController.text.isEmpty || phoneController.text.isEmpty) return;
@@ -23,9 +57,19 @@ class _ContactsScreenState extends State<ContactsScreen> {
       );
     });
 
+    saveContacts();
+
     nameController.clear();
     phoneController.clear();
     Navigator.pop(context);
+  }
+
+  void deleteContact(int index) {
+    setState(() {
+      contacts.removeAt(index);
+    });
+
+    saveContacts();
   }
 
   void showAddContactDialog() {
@@ -54,12 +98,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
         );
       },
     );
-  }
-
-  void deleteContact(int index) {
-    setState(() {
-      contacts.removeAt(index);
-    });
   }
 
   @override

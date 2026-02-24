@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'disaster_list_screen.dart';
+import 'contacts_screen.dart';
 import 'settings_screen.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -31,6 +32,7 @@ class _MainNavigationState extends State<MainNavigation> {
     final List<Widget> screens = [
       const HomeScreen(),
       const DisasterListScreen(),
+      const ContactsScreen(),
       SettingsScreen(
         isDarkMode: widget.isDarkMode,
         onThemeChanged: widget.onThemeChanged,
@@ -42,11 +44,16 @@ class _MainNavigationState extends State<MainNavigation> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
             icon: Icon(Icons.warning),
             label: "Disasters",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.contacts),
+            label: "Contacts",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
