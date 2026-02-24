@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/sos_button.dart';
+import '../widgets/network_status_indicator.dart';
 import 'disaster_list_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -17,6 +18,11 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // 🔹 Network Status Indicator (Currently Hardcoded)
+            const NetworkStatusIndicator(isOnline: false),
+
+            const SizedBox(height: 20),
+
             // 🔹 Status Card
             Container(
               padding: const EdgeInsets.all(16),
