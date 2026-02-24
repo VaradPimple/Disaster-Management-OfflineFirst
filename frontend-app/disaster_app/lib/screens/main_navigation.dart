@@ -20,22 +20,6 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
-  late List<Widget> _screens;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _screens = [
-      const HomeScreen(),
-      const DisasterListScreen(),
-      SettingsScreen(
-        isDarkMode: widget.isDarkMode,
-        onThemeChanged: widget.onThemeChanged,
-      ),
-    ];
-  }
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -44,8 +28,17 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> screens = [
+      const HomeScreen(),
+      const DisasterListScreen(),
+      SettingsScreen(
+        isDarkMode: widget.isDarkMode,
+        onThemeChanged: widget.onThemeChanged,
+      ),
+    ];
+
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,

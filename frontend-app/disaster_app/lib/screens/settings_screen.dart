@@ -15,6 +15,9 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  bool autoAlert = true;
+  bool autoSOS = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,11 +26,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // 🌙 Dark Mode
             SwitchListTile(
               title: const Text("Dark Mode"),
               value: widget.isDarkMode,
               onChanged: (value) {
                 widget.onThemeChanged(value);
+              },
+            ),
+
+            const Divider(),
+
+            // 🚨 Auto Alert
+            SwitchListTile(
+              title: const Text("Enable Auto Alerts"),
+              value: autoAlert,
+              onChanged: (value) {
+                setState(() {
+                  autoAlert = value;
+                });
+              },
+            ),
+
+            // 🆘 Auto SOS
+            SwitchListTile(
+              title: const Text("Enable Auto SOS"),
+              value: autoSOS,
+              onChanged: (value) {
+                setState(() {
+                  autoSOS = value;
+                });
               },
             ),
           ],
