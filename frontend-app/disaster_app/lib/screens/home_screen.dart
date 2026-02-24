@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/sos_button.dart';
+import 'disaster_list_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -7,12 +8,16 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Disaster Management')),
+      appBar: AppBar(
+        title: const Text('Disaster Management'),
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // 🔹 Status Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -29,7 +34,10 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
+
             const SizedBox(height: 30),
+
+            // 🔹 SOS Button
             SOSButton(
               onPressed: () {
                 ScaffoldMessenger.of(
@@ -37,9 +45,19 @@ class HomeScreen extends StatelessWidget {
                 ).showSnackBar(const SnackBar(content: Text("SOS Triggered")));
               },
             ),
+
             const SizedBox(height: 20),
+
+            // 🔹 View Disasters Button
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DisasterListScreen(),
+                  ),
+                );
+              },
               child: const Text("View Nearby Disasters"),
             ),
           ],
