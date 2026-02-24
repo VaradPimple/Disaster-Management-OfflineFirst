@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import '../services/location_service.dart';
 import '../widgets/sos_button.dart';
 import '../widgets/network_status_indicator.dart';
 import '../widgets/responsive_wrapper.dart';
@@ -15,6 +17,25 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool isOnline = false;
   bool isInDanger = false;
+
+  Position? _currentPosition;
+  String _locationText = "Location not fetched";
+
+  Future<void> _getLocation() async {
+    final position = await LocationService.getCurrentLocation();
+
+    if (position != null) {
+      setState(() {
+        _currentPosition = position;
+        _locationText =
+            "Lat: ${position.latitude}, Lng: ${position.longitude}";
+      });
+    } else {
+      setState(() {
+        _locationText = "Unable to fetch location";
+      });
+    }
+  }
 
   void simulateDanger() {
     setState(() {
@@ -46,12 +67,10 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 🔹 Network Status Indicator
               NetworkStatusIndicator(isOnline: isOnline),
 
               const SizedBox(height: 20),
 
-              // 🔹 Dynamic Status Card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -71,6 +90,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 30),
 
+              // 🔹 Get Location Button
+              ElevatedButton(
+                onPressed: _getLocation,
+                child: const Text("Get Current Location"),
+              ),
+
+              const SizedBox(height: 10),
+
+              Text(
+                _locationText,
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 20),
+
               // 🔹 SOS Button
               SOSButton(
                 onPressed: () {
@@ -82,7 +116,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 20),
 
-              // 🔹 View Nearby Disasters
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
@@ -97,7 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 20),
 
-              // 🔹 Simulate Alert
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                 onPressed: simulateDanger,
