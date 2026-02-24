@@ -4,7 +4,14 @@ import 'disaster_list_screen.dart';
 import 'settings_screen.dart';
 
 class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+  final bool isDarkMode;
+  final Function(bool) onThemeChanged;
+
+  const MainNavigation({
+    super.key,
+    required this.isDarkMode,
+    required this.onThemeChanged,
+  });
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
@@ -13,11 +20,21 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    DisasterListScreen(),
-    SettingsScreen(),
-  ];
+  late List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _screens = [
+      const HomeScreen(),
+      const DisasterListScreen(),
+      SettingsScreen(
+        isDarkMode: widget.isDarkMode,
+        onThemeChanged: widget.onThemeChanged,
+      ),
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {

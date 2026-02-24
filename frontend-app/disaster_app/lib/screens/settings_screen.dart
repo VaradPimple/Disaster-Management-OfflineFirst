@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  final bool isDarkMode;
+  final Function(bool) onThemeChanged;
+
+  const SettingsScreen({
+    super.key,
+    required this.isDarkMode,
+    required this.onThemeChanged,
+  });
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool autoAlert = true;
-  bool autoSOS = false;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,22 +24,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           children: [
             SwitchListTile(
-              title: const Text("Enable Auto Alerts"),
-              value: autoAlert,
+              title: const Text("Dark Mode"),
+              value: widget.isDarkMode,
               onChanged: (value) {
-                setState(() {
-                  autoAlert = value;
-                });
-              },
-            ),
-
-            SwitchListTile(
-              title: const Text("Enable Auto SOS"),
-              value: autoSOS,
-              onChanged: (value) {
-                setState(() {
-                  autoSOS = value;
-                });
+                widget.onThemeChanged(value);
               },
             ),
           ],

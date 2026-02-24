@@ -5,8 +5,21 @@ void main() {
   runApp(const DisasterApp());
 }
 
-class DisasterApp extends StatelessWidget {
+class DisasterApp extends StatefulWidget {
   const DisasterApp({super.key});
+
+  @override
+  State<DisasterApp> createState() => _DisasterAppState();
+}
+
+class _DisasterAppState extends State<DisasterApp> {
+  bool isDarkMode = false;
+
+  void toggleTheme(bool value) {
+    setState(() {
+      isDarkMode = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,28 +27,16 @@ class DisasterApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Disaster Management App',
 
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+
       theme: ThemeData(
-        primaryColor: Colors.blue,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
-
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-          elevation: 2,
-        ),
-
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
       ),
 
-      home: const MainNavigation(),
+      darkTheme: ThemeData.dark(useMaterial3: true),
+
+      home: MainNavigation(isDarkMode: isDarkMode, onThemeChanged: toggleTheme),
     );
   }
 }
