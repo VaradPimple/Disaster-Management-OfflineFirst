@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/sos_button.dart';
 import '../widgets/network_status_indicator.dart';
+import '../widgets/responsive_wrapper.dart';
 import 'disaster_list_screen.dart';
 import 'alert_screen.dart';
 
@@ -39,65 +40,71 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Disaster Management'),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            NetworkStatusIndicator(isOnline: isOnline),
+      body: ResponsiveWrapper(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 🔹 Network Status Indicator
+              NetworkStatusIndicator(isOnline: isOnline),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            // 🔹 Dynamic Status Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isInDanger ? Colors.red[100] : Colors.green[100],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                isInDanger ? "Status: DANGER" : "Status: SAFE",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: isInDanger ? Colors.red : Colors.green,
+              // 🔹 Dynamic Status Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isInDanger ? Colors.red[100] : Colors.green[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  isInDanger ? "Status: DANGER" : "Status: SAFE",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isInDanger ? Colors.red : Colors.green,
+                  ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
-            SOSButton(
-              onPressed: () {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text("SOS Triggered")));
-              },
-            ),
+              // 🔹 SOS Button
+              SOSButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("SOS Triggered")),
+                  );
+                },
+              ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const DisasterListScreen(),
-                  ),
-                );
-              },
-              child: const Text("View Nearby Disasters"),
-            ),
+              // 🔹 View Nearby Disasters
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DisasterListScreen(),
+                    ),
+                  );
+                },
+                child: const Text("View Nearby Disasters"),
+              ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              onPressed: simulateDanger,
-              child: const Text("Simulate Alert"),
-            ),
-          ],
+              // 🔹 Simulate Alert
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                onPressed: simulateDanger,
+                child: const Text("Simulate Alert"),
+              ),
+            ],
+          ),
         ),
       ),
     );
