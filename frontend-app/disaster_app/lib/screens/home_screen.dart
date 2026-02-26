@@ -1,3 +1,4 @@
+import '../services/distance_service.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/location_service.dart';
@@ -21,14 +22,29 @@ class _HomeScreenState extends State<HomeScreen> {
   Position? _currentPosition;
   String _locationText = "Location not fetched";
 
+  // Example disaster location (can be replaced later with real DB data)
+  final double disasterLat = 19.0600;
+  final double disasterLng = 73.0200;
+  final double dangerRadius = 2000; // meters
+
   Future<void> _getLocation() async {
     final position = await LocationService.getCurrentLocation();
 
     if (position != null) {
+      double distance = DistanceService.calculateDistance(
+        position.latitude,
+        position.longitude,
+        disasterLat,
+        disasterLng,
+      );
+
       setState(() {
         _currentPosition = position;
         _locationText =
-            "Lat: ${position.latitude}, Lng: ${position.longitude}";
+            "Lat: ${position.latitude}, Lng: ${position.longitude}\n"
+            "Distance to disaster: ${distance.toStringAsFixed(2)} meters";
+
+        isInDanger = distance <= dangerRadius;
       });
     } else {
       setState(() {
@@ -90,7 +106,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 30),
 
-              // 🔹 Get Location Button
               ElevatedButton(
                 onPressed: _getLocation,
                 child: const Text("Get Current Location"),
@@ -105,7 +120,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 20),
 
-              // 🔹 SOS Button
               SOSButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
