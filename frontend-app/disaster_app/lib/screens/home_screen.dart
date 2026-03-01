@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/responsive_wrapper.dart';
+import '../services/location_service.dart';
 import 'disaster_list_screen.dart';
 import 'alert_screen.dart';
 
@@ -11,8 +12,29 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool isOnline = false;
   bool isInDanger = false;
+  String locationStatus = "Location not fetched";
+
+  Future<void> fetchLocation() async {
+    final position = await LocationService.getCurrentLocation();
+
+    if (position == null) {
+      setState(() {
+        locationStatus = "Unable to fetch location";
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Location permission denied or disabled")),
+      );
+      return;
+    }
+
+    setState(() {
+      locationStatus =
+          "Lat: ${position.latitude.toStringAsFixed(4)}, "
+          "Lng: ${position.longitude.toStringAsFixed(4)}";
+    });
+  }
 
   void simulateDanger() {
     setState(() {
@@ -40,19 +62,17 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(20),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              // If laptop width → show side by side
               if (constraints.maxWidth > 600) {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: buildActionSection()),
-                    const SizedBox(width: 30),
                     Expanded(child: buildInfoSection()),
+                    const SizedBox(width: 30),
+                    Expanded(child: buildActionSection()),
                   ],
                 );
               }
 
-              // Mobile layout
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -72,6 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Status Card
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -104,17 +125,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
         const SizedBox(height: 20),
 
+        // Location Card
         Card(
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Padding(
-            padding: EdgeInsets.all(20),
-            child: Text(
-              "RakshaSetu provides offline-first disaster alerts, "
-              "location-based risk detection, and emergency SOS support.",
-              style: TextStyle(fontSize: 16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                const Icon(Icons.location_on, size: 35),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Text(
+                    locationStatus,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+                TextButton(
+                  onPressed: fetchLocation,
+                  child: const Text("Fetch"),
+                ),
+              ],
             ),
           ),
         ),
