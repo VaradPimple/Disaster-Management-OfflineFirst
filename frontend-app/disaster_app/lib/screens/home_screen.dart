@@ -1,9 +1,4 @@
-import '../services/distance_service.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import '../services/location_service.dart';
-import '../widgets/sos_button.dart';
-import '../widgets/network_status_indicator.dart';
 import '../widgets/responsive_wrapper.dart';
 import 'disaster_list_screen.dart';
 import 'alert_screen.dart';
@@ -18,40 +13,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool isOnline = false;
   bool isInDanger = false;
-
-  Position? _currentPosition;
-  String _locationText = "Location not fetched";
-
-  // Example disaster location (can be replaced later with real DB data)
-  final double disasterLat = 19.0600;
-  final double disasterLng = 73.0200;
-  final double dangerRadius = 2000; // meters
-
-  Future<void> _getLocation() async {
-    final position = await LocationService.getCurrentLocation();
-
-    if (position != null) {
-      double distance = DistanceService.calculateDistance(
-        position.latitude,
-        position.longitude,
-        disasterLat,
-        disasterLng,
-      );
-
-      setState(() {
-        _currentPosition = position;
-        _locationText =
-            "Lat: ${position.latitude}, Lng: ${position.longitude}\n"
-            "Distance to disaster: ${distance.toStringAsFixed(2)} meters";
-
-        isInDanger = distance <= dangerRadius;
-      });
-    } else {
-      setState(() {
-        _locationText = "Unable to fetch location";
-      });
-    }
-  }
 
   void simulateDanger() {
     setState(() {
@@ -73,83 +34,128 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('RakshaSetu'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('RakshaSetu')),
       body: ResponsiveWrapper(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          padding: const EdgeInsets.all(20),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // If laptop width → show side by side
+              if (constraints.maxWidth > 600) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: buildActionSection()),
+                    const SizedBox(width: 30),
+                    Expanded(child: buildInfoSection()),
+                  ],
+                );
+              }
+
+              // Mobile layout
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  buildInfoSection(),
+                  const SizedBox(height: 30),
+                  buildActionSection(),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildInfoSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isInDanger
+                ? Colors.red.withOpacity(0.08)
+                : Colors.green.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
             children: [
-              NetworkStatusIndicator(isOnline: isOnline),
-
-              const SizedBox(height: 20),
-
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isInDanger ? Colors.red[100] : Colors.green[100],
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              Icon(
+                isInDanger ? Icons.warning : Icons.verified,
+                size: 40,
+                color: isInDanger ? Colors.red : Colors.green,
+              ),
+              const SizedBox(width: 15),
+              Expanded(
                 child: Text(
                   isInDanger ? "Status: DANGER" : "Status: SAFE",
-                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
                     color: isInDanger ? Colors.red : Colors.green,
                   ),
                 ),
               ),
-
-              const SizedBox(height: 30),
-
-              ElevatedButton(
-                onPressed: _getLocation,
-                child: const Text("Get Current Location"),
-              ),
-
-              const SizedBox(height: 10),
-
-              Text(_locationText, textAlign: TextAlign.center),
-
-              const SizedBox(height: 20),
-
-              SOSButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("SOS Triggered")),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DisasterListScreen(),
-                    ),
-                  );
-                },
-                child: const Text("View Nearby Disasters"),
-              ),
-
-              const SizedBox(height: 20),
-
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                onPressed: simulateDanger,
-                child: const Text("Simulate Alert"),
-              ),
             ],
           ),
         ),
-      ),
+
+        const SizedBox(height: 20),
+
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.all(20),
+            child: Text(
+              "RakshaSetu provides offline-first disaster alerts, "
+              "location-based risk detection, and emergency SOS support.",
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget buildActionSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ElevatedButton(
+          onPressed: () {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text("SOS Triggered")));
+          },
+          child: const Text("Trigger SOS"),
+        ),
+
+        const SizedBox(height: 20),
+
+        ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const DisasterListScreen(),
+              ),
+            );
+          },
+          child: const Text("View Nearby Disasters"),
+        ),
+
+        const SizedBox(height: 20),
+
+        OutlinedButton(
+          onPressed: simulateDanger,
+          child: const Text("Simulate Alert"),
+        ),
+      ],
     );
   }
 }

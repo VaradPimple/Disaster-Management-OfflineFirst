@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'screens/main_navigation.dart';
 
 void main() {
-  runApp(const DisasterApp());
+  runApp(const RakshaSetuApp());
 }
 
-class DisasterApp extends StatefulWidget {
-  const DisasterApp({super.key});
+class RakshaSetuApp extends StatefulWidget {
+  const RakshaSetuApp({super.key});
 
   @override
-  State<DisasterApp> createState() => _DisasterAppState();
+  State<RakshaSetuApp> createState() => _RakshaSetuAppState();
 }
 
-class _DisasterAppState extends State<DisasterApp> {
+class _RakshaSetuAppState extends State<RakshaSetuApp> {
   bool isDarkMode = false;
 
   void toggleTheme(bool value) {
@@ -30,8 +30,26 @@ class _DisasterAppState extends State<DisasterApp> {
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
 
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF1F3A5F), // professional navy tone
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF4F6F8),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1F3A5F),
+          foregroundColor: Colors.white,
+          centerTitle: true,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1F3A5F),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
       ),
 
       darkTheme: ThemeData.dark(useMaterial3: true),
