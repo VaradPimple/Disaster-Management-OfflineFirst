@@ -35,44 +35,77 @@ class DisasterGuidelineDetailScreen extends StatelessWidget {
     }
   }
 
-  List<String> getGuidelines() {
+  Map<String, List<String>> getGuidelines() {
     switch (disasterType) {
       case "Flood":
-        return [
-          "Move to higher ground immediately.",
-          "Avoid walking through flood waters.",
-          "Disconnect electricity supply.",
-          "Keep emergency kit ready.",
-        ];
+        return {
+          "do": [
+            "Move to higher ground immediately.",
+            "Disconnect electricity supply.",
+            "Keep emergency kit ready.",
+          ],
+          "dont": [
+            "Do not walk through moving water.",
+            "Do not drive in flooded areas.",
+            "Do not touch wet electrical equipment.",
+          ],
+        };
+
       case "Earthquake":
-        return [
-          "Drop, Cover and Hold.",
-          "Stay away from windows.",
-          "Do not use elevators.",
-          "Move to open area after shaking stops.",
-        ];
+        return {
+          "do": [
+            "Drop, Cover and Hold.",
+            "Stay away from windows.",
+            "Move to open area after shaking stops.",
+          ],
+          "dont": [
+            "Do not use elevators.",
+            "Do not run during shaking.",
+            "Do not stand near heavy objects.",
+          ],
+        };
+
       case "Cyclone":
-        return [
-          "Stay indoors and secure windows.",
-          "Avoid coastal areas.",
-          "Keep emergency supplies ready.",
-          "Listen to official warnings.",
-        ];
+        return {
+          "do": [
+            "Stay indoors.",
+            "Secure windows and doors.",
+            "Keep emergency supplies ready.",
+          ],
+          "dont": [
+            "Do not go near coastal areas.",
+            "Do not ignore official warnings.",
+            "Do not stand under trees.",
+          ],
+        };
+
       case "Volcano":
-        return [
-          "Wear mask to avoid ash inhalation.",
-          "Stay indoors.",
-          "Avoid river valleys.",
-          "Follow evacuation orders.",
-        ];
+        return {
+          "do": [
+            "Wear mask to avoid ash inhalation.",
+            "Stay indoors.",
+            "Follow evacuation orders.",
+          ],
+          "dont": [
+            "Do not go near lava flows.",
+            "Do not ignore ash fall warnings.",
+            "Do not drive during heavy ash fall.",
+          ],
+        };
+
       default:
-        return ["Stay alert and follow official guidance."];
+        return {
+          "do": ["Stay alert and follow official guidance."],
+          "dont": [],
+        };
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final guidelines = getGuidelines();
+    final guidelineMap = getGuidelines();
+    final dos = guidelineMap["do"]!;
+    final donts = guidelineMap["dont"]!;
     final color = getDisasterColor();
 
     return Scaffold(
@@ -87,7 +120,7 @@ class DisasterGuidelineDetailScreen extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                // 🔥 Top Graphic Section
+                // Top Graphic Section
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -112,23 +145,57 @@ class DisasterGuidelineDetailScreen extends StatelessWidget {
 
                 const SizedBox(height: 30),
 
-                // 📘 Guidelines List
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: guidelines.length,
-                    itemBuilder: (context, index) {
-                      return Card(
-                        elevation: 3,
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: ListTile(
-                          leading: Icon(Icons.check_circle, color: color),
-                          title: Text(
-                            guidelines[index],
-                            style: const TextStyle(fontSize: 16),
+                  child: ListView(
+                    children: [
+                      // DO SECTION
+                      const Text(
+                        "What To Do",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      ...dos.map(
+                        (item) => Card(
+                          child: ListTile(
+                            leading: const Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                            ),
+                            title: Text(item),
                           ),
                         ),
-                      );
-                    },
+                      ),
+
+                      const SizedBox(height: 25),
+
+                      // DON'T SECTION
+                      const Text(
+                        "What Not To Do",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      ...donts.map(
+                        (item) => Card(
+                          child: ListTile(
+                            leading: const Icon(
+                              Icons.cancel,
+                              color: Colors.red,
+                            ),
+                            title: Text(item),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
