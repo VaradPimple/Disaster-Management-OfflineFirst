@@ -25,7 +25,7 @@ class _DisasterAppState extends State<DisasterApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Disaster Management App',
+      title: 'RakshaSetu',
 
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
 
