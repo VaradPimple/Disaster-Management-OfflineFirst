@@ -5,6 +5,36 @@ class DisasterGuidelineDetailScreen extends StatelessWidget {
 
   const DisasterGuidelineDetailScreen({super.key, required this.disasterType});
 
+  IconData getDisasterIcon() {
+    switch (disasterType) {
+      case "Flood":
+        return Icons.water;
+      case "Earthquake":
+        return Icons.public;
+      case "Cyclone":
+        return Icons.air;
+      case "Volcano":
+        return Icons.local_fire_department;
+      default:
+        return Icons.warning;
+    }
+  }
+
+  Color getDisasterColor() {
+    switch (disasterType) {
+      case "Flood":
+        return Colors.blue;
+      case "Earthquake":
+        return Colors.brown;
+      case "Cyclone":
+        return Colors.grey;
+      case "Volcano":
+        return Colors.red;
+      default:
+        return Colors.orange;
+    }
+  }
+
   List<String> getGuidelines() {
     switch (disasterType) {
       case "Flood":
@@ -43,6 +73,7 @@ class DisasterGuidelineDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final guidelines = getGuidelines();
+    final color = getDisasterColor();
 
     return Scaffold(
       appBar: AppBar(
@@ -54,20 +85,53 @@ class DisasterGuidelineDetailScreen extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 600),
           child: Padding(
             padding: const EdgeInsets.all(20),
-            child: ListView.builder(
-              itemCount: guidelines.length,
-              itemBuilder: (context, index) {
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: ListTile(
-                    leading: const Icon(
-                      Icons.check_circle,
-                      color: Colors.green,
-                    ),
-                    title: Text(guidelines[index]),
+            child: Column(
+              children: [
+                // 🔥 Top Graphic Section
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                );
-              },
+                  child: Column(
+                    children: [
+                      Icon(getDisasterIcon(), size: 100, color: color),
+                      const SizedBox(height: 10),
+                      Text(
+                        disasterType,
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                // 📘 Guidelines List
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: guidelines.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        elevation: 3,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          leading: Icon(Icons.check_circle, color: color),
+                          title: Text(
+                            guidelines[index],
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ),
