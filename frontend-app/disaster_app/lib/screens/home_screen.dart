@@ -1,3 +1,4 @@
+import '../models/disaster.dart';
 import '../services/distance_service.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -7,6 +8,7 @@ import '../widgets/network_status_indicator.dart';
 import '../widgets/responsive_wrapper.dart';
 import 'disaster_list_screen.dart';
 import 'alert_screen.dart';
+import 'map_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,29 +24,59 @@ class _HomeScreenState extends State<HomeScreen> {
   Position? _currentPosition;
   String _locationText = "Location not fetched";
 
-  // Example disaster location (can be replaced later with real DB data)
-  final double disasterLat = 19.0600;
-  final double disasterLng = 73.0200;
-  final double dangerRadius = 2000; // meters
+  Disaster? _activeDisaster;
+
+  final List<Disaster> disasterZones = [
+    Disaster(
+      id: "1",
+      type: "Flood Warning",
+      latitude: 19.0600,
+      longitude: 73.0200,
+      radius: 2000,
+      message: "High-risk flood zone. Move to higher ground immediately.",
+    ),
+    Disaster(
+      id: "2",
+      type: "Fire Hazard",
+      latitude: 19.0500,
+      longitude: 73.0000,
+      radius: 1500,
+      message: "Active fire hazard nearby. Avoid the area.",
+    ),
+  ];
 
   Future<void> _getLocation() async {
     final position = await LocationService.getCurrentLocation();
 
     if (position != null) {
-      double distance = DistanceService.calculateDistance(
-        position.latitude,
-        position.longitude,
-        disasterLat,
-        disasterLng,
-      );
+      double? nearestDistance;
+      Disaster? triggeredDisaster;
+
+      for (var disaster in disasterZones) {
+        double distance = DistanceService.calculateDistance(
+          position.latitude,
+          position.longitude,
+          disaster.latitude,
+          disaster.longitude,
+        );
+
+        if (nearestDistance == null || distance < nearestDistance) {
+          nearestDistance = distance;
+        }
+
+        if (distance <= disaster.radius) {
+          triggeredDisaster = disaster;
+        }
+      }
 
       setState(() {
         _currentPosition = position;
         _locationText =
             "Lat: ${position.latitude}, Lng: ${position.longitude}\n"
-            "Distance to disaster: ${distance.toStringAsFixed(2)} meters";
+            "Nearest disaster distance: ${nearestDistance?.toStringAsFixed(2)} meters";
 
-        isInDanger = distance <= dangerRadius;
+        isInDanger = triggeredDisaster != null;
+        _activeDisaster = triggeredDisaster;
       });
     } else {
       setState(() {
@@ -94,7 +126,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  isInDanger ? "Status: DANGER" : "Status: SAFE",
+                  isInDanger
+                      ? "Status: DANGER\n${_activeDisaster?.type ?? ''}"
+                      : "Status: SAFE",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20,
@@ -113,10 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 10),
 
-              Text(
-                _locationText,
-                textAlign: TextAlign.center,
-              ),
+              Text(_locationText, textAlign: TextAlign.center),
 
               const SizedBox(height: 20),
 
@@ -140,6 +171,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
                 child: const Text("View Nearby Disasters"),
+              ),
+
+              const SizedBox(height: 20),
+
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MapScreen()),
+                  );
+                },
+                child: const Text("Open Disaster Map"),
               ),
 
               const SizedBox(height: 20),
