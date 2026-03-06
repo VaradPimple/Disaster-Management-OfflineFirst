@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'disaster_list_screen.dart';
 import 'contacts_screen.dart';
+import 'guidelines_screen.dart';
 import 'settings_screen.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -33,6 +34,7 @@ class _MainNavigationState extends State<MainNavigation> {
       const HomeScreen(),
       const DisasterListScreen(),
       const ContactsScreen(),
+      const GuidelinesScreen(),
       SettingsScreen(
         isDarkMode: widget.isDarkMode,
         onThemeChanged: widget.onThemeChanged,
@@ -44,7 +46,7 @@ class _MainNavigationState extends State<MainNavigation> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
+        type: BottomNavigationBarType.fixed, // important for 5 tabs
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
@@ -54,6 +56,10 @@ class _MainNavigationState extends State<MainNavigation> {
           BottomNavigationBarItem(
             icon: Icon(Icons.contacts),
             label: "Contacts",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.menu_book),
+            label: "Guidelines",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
