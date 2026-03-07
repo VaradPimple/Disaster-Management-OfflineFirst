@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'admin_login_screen.dart';
+import 'signup_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -22,16 +23,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Settings"), centerTitle: true),
+      appBar: AppBar(title: const Text("Settings")),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 500),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 🌙 Dark Mode Toggle
                 SwitchListTile(
                   title: const Text("Dark Mode"),
                   value: widget.isDarkMode,
@@ -42,7 +42,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 const Divider(),
 
-                // 🚨 Auto Alert Toggle
                 SwitchListTile(
                   title: const Text("Enable Auto Alerts"),
                   value: autoAlert,
@@ -53,7 +52,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
 
-                // 🆘 Auto SOS Toggle
                 SwitchListTile(
                   title: const Text("Enable Auto SOS"),
                   value: autoSOS,
@@ -66,7 +64,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 const SizedBox(height: 30),
 
-                // 🔐 Admin Login Button
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SignupScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text("Create User Account"),
+                ),
+
+                const SizedBox(height: 15),
+
                 ElevatedButton(
                   onPressed: () {
                     Navigator.push(
