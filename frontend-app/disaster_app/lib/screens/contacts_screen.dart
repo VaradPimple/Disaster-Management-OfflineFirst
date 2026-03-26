@@ -1,7 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/contact.dart';
+import '../services/contact_api_service.dart';
 
 class ContactsScreen extends StatefulWidget {
   const ContactsScreen({super.key});
@@ -15,6 +14,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController relationController = TextEditingController();
 
   @override
   void initState() {
@@ -22,54 +22,67 @@ class _ContactsScreenState extends State<ContactsScreen> {
     loadContacts();
   }
 
-  Future<void> saveContacts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<String> contactList = contacts
-        .map(
-          (contact) =>
-              jsonEncode({'name': contact.name, 'phone': contact.phone}),
-        )
-        .toList();
-
-    await prefs.setStringList('contacts', contactList);
-  }
-
+  // 🔹 Load from backend
   Future<void> loadContacts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<String>? contactList = prefs.getStringList('contacts');
+    try {
+      final data = await ContactApiService.fetchContacts();
 
-    if (contactList != null) {
       setState(() {
-        contacts = contactList.map((item) {
-          final decoded = jsonDecode(item);
-          return Contact(name: decoded['name'], phone: decoded['phone']);
-        }).toList();
+        contacts = data;
       });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to load contacts from server")),
+      );
     }
   }
 
-  void addContact() {
-    if (nameController.text.isEmpty || phoneController.text.isEmpty) return;
+  // 🔹 Add contact (backend)
+  Future<void> addContact() async {
+    if (nameController.text.isEmpty ||
+        phoneController.text.isEmpty ||
+        relationController.text.isEmpty) {
+      return;
+    }
 
-    setState(() {
-      contacts.add(
-        Contact(name: nameController.text, phone: phoneController.text),
+    try {
+      await ContactApiService.addContact(
+        Contact(
+          name: nameController.text,
+          phone: phoneController.text,
+          relation: relationController.text,
+        ),
       );
-    });
 
-    saveContacts();
+      await loadContacts(); // refresh from backend
 
-    nameController.clear();
-    phoneController.clear();
-    Navigator.pop(context);
+      nameController.clear();
+      phoneController.clear();
+      relationController.clear();
+
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to add contact")));
+    }
   }
 
-  void deleteContact(int index) {
-    setState(() {
-      contacts.removeAt(index);
-    });
+  // 🔹 Delete contact (backend)
+  Future<void> deleteContact(int index) async {
+    try {
+      final contact = contacts[index];
 
-    saveContacts();
+      if (contact.id != null) {
+        await ContactApiService.deleteContact(contact.id!);
+      }
+
+      await loadContacts(); // refresh from backend
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to delete contact")));
+    }
   }
 
   void showAddContactDialog() {
@@ -89,6 +102,10 @@ class _ContactsScreenState extends State<ContactsScreen> {
                 controller: phoneController,
                 decoration: const InputDecoration(labelText: "Phone"),
                 keyboardType: TextInputType.phone,
+              ),
+              TextField(
+                controller: relationController,
+                decoration: const InputDecoration(labelText: "Relation"),
               ),
             ],
           ),
@@ -115,7 +132,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                 final contact = contacts[index];
                 return ListTile(
                   title: Text(contact.name),
-                  subtitle: Text(contact.phone),
+                  subtitle: Text("${contact.phone} • ${contact.relation}"),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () => deleteContact(index),

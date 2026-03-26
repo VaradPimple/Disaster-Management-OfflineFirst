@@ -1,37 +1,54 @@
 import 'package:flutter/material.dart';
 import '../widgets/disaster_card.dart';
+import '../services/disaster_api_service.dart';
+import '../models/disaster.dart';
 
-class DisasterListScreen extends StatelessWidget {
+class DisasterListScreen extends StatefulWidget {
   const DisasterListScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> dummyDisasters = [
-      {
-        "type": "Flood",
-        "radius": 5.0,
-        "message": "Heavy flood warning in low-lying areas.",
-      },
-      {
-        "type": "Earthquake",
-        "radius": 10.0,
-        "message": "Seismic activity detected nearby.",
-      },
-    ];
+  State<DisasterListScreen> createState() => _DisasterListScreenState();
+}
 
+class _DisasterListScreenState extends State<DisasterListScreen> {
+  late Future<List<Disaster>> disasters;
+
+  @override
+  void initState() {
+    super.initState();
+    disasters = DisasterApiService.fetchDisasters();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Nearby Disasters")),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: ListView.builder(
-          itemCount: dummyDisasters.length,
-          itemBuilder: (context, index) {
-            final disaster = dummyDisasters[index];
+        child: FutureBuilder<List<Disaster>>(
+          future: disasters,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-            return DisasterCard(
-              type: disaster["type"],
-              radius: disaster["radius"],
-              message: disaster["message"],
+            if (snapshot.hasError) {
+              return const Center(child: Text("Failed to load disasters"));
+            }
+
+            final disasterList = snapshot.data!;
+
+            return ListView.builder(
+              itemCount: disasterList.length,
+              itemBuilder: (context, index) {
+                final disaster = disasterList[index];
+
+                return DisasterCard(
+                  type: disaster.type,
+                  radius: disaster.radius,
+                  message: disaster.message,
+                );
+              },
             );
           },
         ),

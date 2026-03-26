@@ -1,6 +1,5 @@
 package com.disaster.backend.entity;
 
-
 import jakarta.persistence.*;
 
 @Entity

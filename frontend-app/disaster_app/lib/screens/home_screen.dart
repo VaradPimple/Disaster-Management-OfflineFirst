@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import '../widgets/responsive_wrapper.dart';
 import '../services/location_service.dart';
+import '../services/disaster_api_service.dart';
+import '../services/distance_service.dart';
+import '../models/disaster.dart';
 import 'disaster_list_screen.dart';
 import 'alert_screen.dart';
 import 'map_screen.dart';
+import '../services/sos_service.dart';
+import '../services/contact_api_service.dart';
+import 'package:geocoding/geocoding.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,14 +20,20 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool isInDanger = false;
+  bool isLoadingLocation = false;
   String locationStatus = "Location not fetched";
 
   Future<void> fetchLocation() async {
+    setState(() {
+      isLoadingLocation = true;
+    });
+
     final position = await LocationService.getCurrentLocation();
 
     if (position == null) {
       setState(() {
         locationStatus = "Unable to fetch location";
+        isLoadingLocation = false;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -30,11 +42,72 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    setState(() {
-      locationStatus =
-          "Lat: ${position.latitude.toStringAsFixed(4)}, "
-          "Lng: ${position.longitude.toStringAsFixed(4)}";
-    });
+    // ✅ Safe geocoding (no freezing)
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      ).timeout(const Duration(seconds: 3));
+
+      final place = placemarks[0];
+
+      String address =
+          "${place.locality ?? ''}, ${place.administrativeArea ?? ''}";
+
+      setState(() {
+        locationStatus =
+            "$address\nLat: ${position.latitude.toStringAsFixed(4)}, "
+            "Lng: ${position.longitude.toStringAsFixed(4)}";
+      });
+    } catch (e) {
+      // fallback
+      setState(() {
+        locationStatus =
+            "Lat: ${position.latitude.toStringAsFixed(4)}, "
+            "Lng: ${position.longitude.toStringAsFixed(4)}";
+      });
+    }
+
+    try {
+      List<Disaster> disasters = await DisasterApiService.fetchDisasters();
+
+      for (var disaster in disasters) {
+        double distance = DistanceService.calculateDistance(
+          position.latitude,
+          position.longitude,
+          disaster.latitude,
+          disaster.longitude,
+        );
+
+        if (distance <= disaster.radius) {
+          setState(() {
+            isInDanger = true;
+            isLoadingLocation = false;
+          });
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AlertScreen(
+                disasterType: disaster.type,
+                message: disaster.message,
+              ),
+            ),
+          );
+
+          return;
+        }
+      }
+
+      setState(() {
+        isInDanger = false;
+        isLoadingLocation = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingLocation = false;
+      });
+    }
   }
 
   void simulateDanger() {
@@ -65,7 +138,6 @@ class _HomeScreenState extends State<HomeScreen> {
             builder: (context, constraints) {
               if (constraints.maxWidth > 600) {
                 return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(child: buildInfoSection()),
                     const SizedBox(width: 30),
@@ -75,7 +147,6 @@ class _HomeScreenState extends State<HomeScreen> {
               }
 
               return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   buildInfoSection(),
                   const SizedBox(height: 30),
@@ -91,7 +162,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget buildInfoSection() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           padding: const EdgeInsets.all(20),
@@ -126,26 +196,25 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 20),
 
         Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(Icons.location_on, size: 35),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: Text(
-                    locationStatus,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-                TextButton(
-                  onPressed: fetchLocation,
-                  child: const Text("Fetch"),
-                ),
+                const Icon(Icons.location_on),
+                const SizedBox(width: 10),
+                Expanded(child: Text(locationStatus)),
+
+                // ✅ Spinner
+                isLoadingLocation
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : TextButton(
+                        onPressed: fetchLocation,
+                        child: const Text("Fetch"),
+                      ),
               ],
             ),
           ),
@@ -158,11 +227,29 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // ✅ Only ONE SOS button
         ElevatedButton(
-          onPressed: () {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text("SOS Triggered")));
+          onPressed: () async {
+            try {
+              final contacts = await ContactApiService.fetchContacts();
+
+              if (contacts.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("No emergency contacts found")),
+                );
+                return;
+              }
+
+              await SosService.triggerSOS(contacts);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Opening SMS app...")),
+              );
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Failed to trigger SOS")),
+              );
+            }
           },
           child: const Text("Trigger SOS"),
         ),
@@ -183,6 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
         const SizedBox(height: 20),
 
+        // ✅ Map button present
         ElevatedButton(
           onPressed: () {
             Navigator.push(

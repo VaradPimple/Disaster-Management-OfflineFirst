@@ -14,6 +14,9 @@ class DisasterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 🔹 Convert meters → km
+    final double radiusKm = radius / 1000;
+
     return Card(
       elevation: 3,
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -27,7 +30,13 @@ class DisasterCard extends StatelessWidget {
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
-            Text("Danger Radius: $radius km"),
+
+            // ✅ Correct unit + formatted
+            Text(
+              "Danger Radius: ${radiusKm.toStringAsFixed(1)} km",
+              style: const TextStyle(color: Colors.grey),
+            ),
+
             const SizedBox(height: 6),
             Text(message),
           ],
