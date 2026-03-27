@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignupScreen extends StatefulWidget {
-  const SignupScreen({super.key});
+  SignupScreen({super.key}); // ✅ removed const
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();
@@ -15,14 +18,50 @@ class _SignupScreenState extends State<SignupScreen> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-  void registerUser() {
+  bool isLoading = false;
+
+  Future<void> registerUser() async {
     if (!_formKey.currentState!.validate()) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("User Registered (Frontend Demo)")),
-    );
+    setState(() => isLoading = true);
 
-    Navigator.pop(context);
+    try {
+      final response = await http.post(
+        Uri.parse("http://localhost:8080/api/auth/signup"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "name": nameController.text,
+          "email": emailController.text,
+          "password": passwordController.text,
+        }),
+      );
+
+      setState(() => isLoading = false);
+
+      if (response.statusCode == 200) {
+        final prefs = await SharedPreferences.getInstance();
+
+        // ✅ Save name + email
+        await prefs.setString("userName", nameController.text);
+        await prefs.setString("userEmail", emailController.text);
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(response.body)));
+
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Signup failed")));
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error connecting to server")),
+      );
+    }
   }
 
   @override
@@ -48,12 +87,9 @@ class _SignupScreenState extends State<SignupScreen> {
                       labelText: "Full Name",
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Enter your name";
-                      }
-                      return null;
-                    },
+                    validator: (value) => value == null || value.isEmpty
+                        ? "Enter your name"
+                        : null,
                   ),
 
                   const SizedBox(height: 20),
@@ -65,12 +101,8 @@ class _SignupScreenState extends State<SignupScreen> {
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Enter email";
-                      }
-                      if (!value.contains("@")) {
-                        return "Enter valid email";
-                      }
+                      if (value == null || value.isEmpty) return "Enter email";
+                      if (!value.contains("@")) return "Enter valid email";
                       return null;
                     },
                   ),
@@ -84,12 +116,9 @@ class _SignupScreenState extends State<SignupScreen> {
                       labelText: "Password",
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) {
-                      if (value == null || value.length < 6) {
-                        return "Password must be at least 6 characters";
-                      }
-                      return null;
-                    },
+                    validator: (value) => value == null || value.length < 6
+                        ? "Password must be at least 6 characters"
+                        : null,
                   ),
 
                   const SizedBox(height: 20),
@@ -101,27 +130,24 @@ class _SignupScreenState extends State<SignupScreen> {
                       labelText: "Confirm Password",
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) {
-                      if (value != passwordController.text) {
-                        return "Passwords do not match";
-                      }
-                      return null;
-                    },
+                    validator: (value) => value != passwordController.text
+                        ? "Passwords do not match"
+                        : null,
                   ),
 
                   const SizedBox(height: 30),
 
-                  ElevatedButton(
-                    onPressed: registerUser,
-                    child: const Text("Sign Up"),
-                  ),
+                  isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                          onPressed: registerUser,
+                          child: const Text("Sign Up"),
+                        ),
 
                   const SizedBox(height: 15),
 
                   TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    onPressed: () => Navigator.pop(context),
                     child: const Text("Already have an account? Login"),
                   ),
                 ],

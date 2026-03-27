@@ -64,12 +64,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 const SizedBox(height: 30),
 
+                // ✅ SIGNUP BUTTON
                 ElevatedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const SignupScreen(),
+                       builder: (context) => SignupScreen(), // fixed
                       ),
                     );
                   },
@@ -78,12 +79,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 const SizedBox(height: 15),
 
+                // ✅ LOGIN BUTTON
                 ElevatedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AdminLoginScreen(),
+                        builder: (context) => AdminLoginScreen(), // fixed
                       ),
                     );
                   },

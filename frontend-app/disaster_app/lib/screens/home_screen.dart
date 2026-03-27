@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/responsive_wrapper.dart';
 import '../services/location_service.dart';
 import '../services/disaster_api_service.dart';
@@ -10,6 +11,7 @@ import 'map_screen.dart';
 import '../services/sos_service.dart';
 import '../services/contact_api_service.dart';
 import 'package:geocoding/geocoding.dart';
+import 'admin_login_screen.dart'; // ✅ added
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,6 +24,35 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isInDanger = false;
   bool isLoadingLocation = false;
   String locationStatus = "Location not fetched";
+
+  String userName = "";
+
+  @override
+  void initState() {
+    super.initState();
+    loadUser();
+  }
+
+  Future<void> loadUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString("userName") ?? "Guest";
+    });
+  }
+
+  // ✅ FIXED LOGOUT
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => AdminLoginScreen()),
+        (route) => false,
+      );
+    }
+  }
 
   Future<void> fetchLocation() async {
     setState(() {
@@ -42,7 +73,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // ✅ Safe geocoding (no freezing)
     try {
       final placemarks = await placemarkFromCoordinates(
         position.latitude,
@@ -60,7 +90,6 @@ class _HomeScreenState extends State<HomeScreen> {
             "Lng: ${position.longitude.toStringAsFixed(4)}";
       });
     } catch (e) {
-      // fallback
       setState(() {
         locationStatus =
             "Lat: ${position.latitude.toStringAsFixed(4)}, "
@@ -130,7 +159,26 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('RakshaSetu')),
+      appBar: AppBar(
+        title: const Text('RakshaSetu'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Center(
+              child: Text(
+                userName, // ✅ only username
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: "Logout",
+            onPressed: logout,
+            icon: const Icon(Icons.logout),
+          ),
+        ],
+      ),
+
       body: ResponsiveWrapper(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -203,8 +251,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Icon(Icons.location_on),
                 const SizedBox(width: 10),
                 Expanded(child: Text(locationStatus)),
-
-                // ✅ Spinner
                 isLoadingLocation
                     ? const SizedBox(
                         width: 20,
@@ -227,7 +273,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ✅ Only ONE SOS button
         ElevatedButton(
           onPressed: () async {
             try {
@@ -270,7 +315,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
         const SizedBox(height: 20),
 
-        // ✅ Map button present
         ElevatedButton(
           onPressed: () {
             Navigator.push(

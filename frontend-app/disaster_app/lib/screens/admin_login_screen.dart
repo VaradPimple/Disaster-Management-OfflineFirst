@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminLoginScreen extends StatefulWidget {
-  const AdminLoginScreen({super.key});
+  AdminLoginScreen({super.key}); // ✅ removed const
 
   @override
   State<AdminLoginScreen> createState() => _AdminLoginScreenState();
@@ -10,43 +13,65 @@ class AdminLoginScreen extends StatefulWidget {
 class _AdminLoginScreenState extends State<AdminLoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   bool isLoading = false;
 
-  void login() async {
+  Future<void> login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 2)); // simulate API call
+    try {
+      final response = await http.post(
+        Uri.parse("http://localhost:8080/api/auth/login"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": emailController.text,
+          "password": passwordController.text,
+        }),
+      );
 
-    setState(() {
-      isLoading = false;
-    });
+      setState(() => isLoading = false);
 
-    // Dummy login check
-    if (usernameController.text == "admin" &&
-        passwordController.text == "admin123") {
+      if (response.statusCode == 200 &&
+          response.body.contains("Login successful")) {
+        final prefs = await SharedPreferences.getInstance();
+
+        // ✅ Save email
+        await prefs.setString("userEmail", emailController.text);
+
+        // ✅ Keep username (if already saved)
+        if (!prefs.containsKey("userName")) {
+          await prefs.setString("userName", emailController.text);
+        }
+
+        await prefs.setBool("isLoggedIn", true);
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(response.body)));
+
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(response.body)));
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Login Successful")));
-
-      Navigator.pop(context); // later replace with AdminDashboard
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Invalid Credentials")));
+      ).showSnackBar(const SnackBar(content: Text("Server connection failed")));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Admin Login"), centerTitle: true),
+      appBar: AppBar(title: const Text("Login"), centerTitle: true),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
@@ -57,22 +82,18 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.admin_panel_settings, size: 80),
+                  const Icon(Icons.login, size: 80),
 
                   const SizedBox(height: 20),
 
                   TextFormField(
-                    controller: usernameController,
+                    controller: emailController,
                     decoration: const InputDecoration(
-                      labelText: "Username",
+                      labelText: "Email",
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Enter username";
-                      }
-                      return null;
-                    },
+                    validator: (value) =>
+                        value == null || value.isEmpty ? "Enter email" : null,
                   ),
 
                   const SizedBox(height: 20),
@@ -84,12 +105,9 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                       labelText: "Password",
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Enter password";
-                      }
-                      return null;
-                    },
+                    validator: (value) => value == null || value.isEmpty
+                        ? "Enter password"
+                        : null,
                   ),
 
                   const SizedBox(height: 30),
