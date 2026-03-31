@@ -5,13 +5,14 @@ import '../services/location_service.dart';
 import '../services/disaster_api_service.dart';
 import '../services/distance_service.dart';
 import '../models/disaster.dart';
+import '../models/contact.dart'; //
 import 'disaster_list_screen.dart';
 import 'alert_screen.dart';
 import 'map_screen.dart';
 import '../services/sos_service.dart';
 import '../services/contact_api_service.dart';
 import 'package:geocoding/geocoding.dart';
-import 'admin_login_screen.dart'; // ✅ added
+import 'admin_login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -40,7 +41,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // ✅ FIXED LOGOUT
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -156,6 +156,35 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ✅ FIXED SOS (WITH EMAIL)
+  Future<void> triggerSOS() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString("userEmail") ?? "";
+
+      final List<Contact> contacts = await ContactApiService.fetchContacts(
+        email,
+      );
+
+      if (contacts.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("No emergency contacts found")),
+        );
+        return;
+      }
+
+      await SosService.triggerSOS(contacts);
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Opening SMS app...")));
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to trigger SOS")));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -165,10 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Center(
-              child: Text(
-                userName, // ✅ only username
-                style: const TextStyle(fontSize: 14),
-              ),
+              child: Text(userName, style: const TextStyle(fontSize: 14)),
             ),
           ),
           IconButton(
@@ -178,7 +204,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-
       body: ResponsiveWrapper(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -240,9 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-
         const SizedBox(height: 20),
-
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -274,33 +297,10 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ElevatedButton(
-          onPressed: () async {
-            try {
-              final contacts = await ContactApiService.fetchContacts();
-
-              if (contacts.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("No emergency contacts found")),
-                );
-                return;
-              }
-
-              await SosService.triggerSOS(contacts);
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Opening SMS app...")),
-              );
-            } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Failed to trigger SOS")),
-              );
-            }
-          },
+          onPressed: triggerSOS, // ✅ FIXED
           child: const Text("Trigger SOS"),
         ),
-
         const SizedBox(height: 20),
-
         ElevatedButton(
           onPressed: () {
             Navigator.push(
@@ -312,9 +312,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           child: const Text("View Nearby Disasters"),
         ),
-
         const SizedBox(height: 20),
-
         ElevatedButton(
           onPressed: () {
             Navigator.push(
@@ -324,9 +322,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           child: const Text("Open Disaster Map"),
         ),
-
         const SizedBox(height: 20),
-
         OutlinedButton(
           onPressed: simulateDanger,
           child: const Text("Simulate Alert"),

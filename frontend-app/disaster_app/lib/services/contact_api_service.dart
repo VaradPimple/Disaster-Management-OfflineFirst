@@ -6,9 +6,9 @@ import '../config/api_config.dart';
 class ContactApiService {
   static String get baseUrl => "${ApiConfig.baseUrl}/contacts";
 
-  // GET all contacts
-  static Future<List<Contact>> fetchContacts() async {
-    final response = await http.get(Uri.parse(baseUrl));
+  // ✅ GET contacts by user
+  static Future<List<Contact>> fetchContacts(String email) async {
+    final response = await http.get(Uri.parse("$baseUrl/user/$email"));
 
     if (response.statusCode == 200) {
       List data = json.decode(response.body);
@@ -18,7 +18,7 @@ class ContactApiService {
     }
   }
 
-  // POST new contact
+  // ✅ ADD contact
   static Future<void> addContact(Contact contact) async {
     final response = await http.post(
       Uri.parse(baseUrl),
@@ -31,7 +31,7 @@ class ContactApiService {
     }
   }
 
-  // DELETE contact
+  // ✅ DELETE contact
   static Future<void> deleteContact(int id) async {
     final response = await http.delete(Uri.parse("$baseUrl/$id"));
 

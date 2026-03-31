@@ -3,8 +3,11 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../main.dart'; // ✅ IMPORTANT
+import 'signup_screen.dart';
+
 class AdminLoginScreen extends StatefulWidget {
-  AdminLoginScreen({super.key}); // ✅ removed const
+  const AdminLoginScreen({super.key});
 
   @override
   State<AdminLoginScreen> createState() => _AdminLoginScreenState();
@@ -39,21 +42,16 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
           response.body.contains("Login successful")) {
         final prefs = await SharedPreferences.getInstance();
 
-        // ✅ Save email
         await prefs.setString("userEmail", emailController.text);
-
-        // ✅ Keep username (if already saved)
-        if (!prefs.containsKey("userName")) {
-          await prefs.setString("userName", emailController.text);
-        }
-
+        await prefs.setString("userName", emailController.text);
         await prefs.setBool("isLoggedIn", true);
 
-        ScaffoldMessenger.of(
+        // ✅ FINAL FIX: RESTART APP FLOW
+        Navigator.pushAndRemoveUntil(
           context,
-        ).showSnackBar(SnackBar(content: Text(response.body)));
-
-        Navigator.pop(context);
+          MaterialPageRoute(builder: (context) => const RakshaSetuApp()),
+          (route) => false,
+        );
       } else {
         ScaffoldMessenger.of(
           context,
@@ -118,6 +116,18 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                           onPressed: login,
                           child: const Text("Login"),
                         ),
+
+                  const SizedBox(height: 10),
+
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => SignupScreen()),
+                      );
+                    },
+                    child: const Text("Don't have an account? Sign Up"),
+                  ),
                 ],
               ),
             ),

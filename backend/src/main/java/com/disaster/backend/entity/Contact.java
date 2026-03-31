@@ -13,6 +13,8 @@ public class Contact {
     private String phone;
     private String relation;
 
+    private String userEmail; // ✅ NEW
+
     public Contact() {}
 
     public Long getId() { return id; }
@@ -25,4 +27,7 @@ public class Contact {
 
     public String getRelation() { return relation; }
     public void setRelation(String relation) { this.relation = relation; }
+
+    public String getUserEmail() { return userEmail; }
+    public void setUserEmail(String userEmail) { this.userEmail = userEmail; }
 }

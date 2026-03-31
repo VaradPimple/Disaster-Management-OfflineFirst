@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/contact.dart';
 import '../services/contact_api_service.dart';
 
@@ -19,25 +20,28 @@ class _ContactsScreenState extends State<ContactsScreen> {
   @override
   void initState() {
     super.initState();
-    loadContacts();
+    Future.delayed(const Duration(milliseconds: 200), loadContacts);
   }
 
-  // 🔹 Load from backend
   Future<void> loadContacts() async {
     try {
-      final data = await ContactApiService.fetchContacts();
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString("userEmail") ?? "";
+
+      if (email.isEmpty) return;
+
+      final data = await ContactApiService.fetchContacts(email);
 
       setState(() {
         contacts = data;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to load contacts from server")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to load contacts")));
     }
   }
 
-  // 🔹 Add contact (backend)
   Future<void> addContact() async {
     if (nameController.text.isEmpty ||
         phoneController.text.isEmpty ||
@@ -46,21 +50,27 @@ class _ContactsScreenState extends State<ContactsScreen> {
     }
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString("userEmail") ?? "";
+
       await ContactApiService.addContact(
         Contact(
           name: nameController.text,
           phone: phoneController.text,
           relation: relationController.text,
+          userEmail: email,
         ),
       );
 
-      await loadContacts(); // refresh from backend
+      Navigator.pop(context);
+
+      await Future.delayed(const Duration(milliseconds: 300)); // ✅ FIX
+
+      await loadContacts();
 
       nameController.clear();
       phoneController.clear();
       relationController.clear();
-
-      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -68,7 +78,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
     }
   }
 
-  // 🔹 Delete contact (backend)
   Future<void> deleteContact(int index) async {
     try {
       final contact = contacts[index];
@@ -77,7 +86,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
         await ContactApiService.deleteContact(contact.id!);
       }
 
-      await loadContacts(); // refresh from backend
+      await loadContacts();
     } catch (e) {
       ScaffoldMessenger.of(
         context,

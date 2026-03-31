@@ -15,8 +15,8 @@ public class ContactService {
         this.repository = repository;
     }
 
-    public List<Contact> getAllContacts() {
-        return repository.findAll();
+    public List<Contact> getContactsByUser(String email) {
+        return repository.findByUserEmail(email); // ✅ UPDATED
     }
 
     public Contact saveContact(Contact contact) {

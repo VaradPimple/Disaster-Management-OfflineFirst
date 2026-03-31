@@ -17,16 +17,19 @@ public class ContactController {
         this.service = service;
     }
 
-    @GetMapping
-    public List<Contact> getAll() {
-        return service.getAllContacts();
+    // ✅ GET contacts by user
+    @GetMapping("/user/{email}")
+    public List<Contact> getUserContacts(@PathVariable String email) {
+        return service.getContactsByUser(email);
     }
 
+    // POST
     @PostMapping
     public Contact create(@RequestBody Contact contact) {
         return service.saveContact(contact);
     }
 
+    // DELETE
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         service.deleteContact(id);
